@@ -18,8 +18,7 @@ var ICONMAP = {};
 
 	var map = null;
 
-	// building the api call for atms (automated teller machine)
-	// the overpass api URL
+	// building the api call for the overpass api URL
 	var ovpCall = 'http://overpass-api.de/api/interpreter?data=';
 
 	// setting the output format to json
