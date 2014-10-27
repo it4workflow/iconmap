@@ -62,7 +62,7 @@ var ICONMAP = {};
 					if (!(node.id in nodeIds)) {
 
 						nodeIds[node.id] = true;
-						
+
 						var status = 0;
 						Object.keys(node.tags).forEach(function(k) {
 							if (k === "amenity") {
@@ -92,7 +92,6 @@ var ICONMAP = {};
 							addIconToMap(node, operatorCategories[0], 'white',
 									100);
 						}
-
 					}
 				}
 			});
