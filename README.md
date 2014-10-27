@@ -1,4 +1,15 @@
-# iconmap
+# Recycling Map
+
+Shows all amenity=recycling from <a href="http://www.openstreetmap.org">OpenStreetMap</a>
+
+There are coloured circles:
+
+* red = only amenity
+* orange = missing recycling:material
+* yellow = missing recycling_type
+* green = complete
+
+# Thanks
 
 inspired by https://github.com/momolinus/atm-map
 

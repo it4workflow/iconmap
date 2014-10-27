@@ -58,10 +58,28 @@ var UTILS = {};
 		    table += '<table>';
 		    table += '<tr>';
 		    table += '<td>';
-		    table += 'legend';
+		    table += 'red = only amenity';
 		    table += '</td>';
 		    table += '</tr>';
 
+		    table += '<tr>';
+		    table += '<td>';
+		    table += 'orange = missing recycling:material';
+		    table += '</td>';
+		    table += '</tr>';
+
+		    table += '<tr>';
+		    table += '<td>';
+		    table += 'yellow = missing recycling_type';
+		    table += '</td>';
+		    table += '</tr>';
+
+			table += '<tr>';
+		    table += '<td>';
+		    table += 'green = complete';
+		    table += '</td>';
+		    table += '</tr>';
+			
 		    table += '</table>';
 		    table += '</div>';
 		    

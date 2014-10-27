@@ -14,18 +14,24 @@ var ICONMAP = {};
 	var namedGroup = {};
 
 	var operatorLayers;
-	var operatorCategories = [];
-
+	var operatorCategories = [ "amenity only", "amenity and type", "amenity and material", "complete" ];
+	
 	var map = null;
 
+	var recyclingmaterial=/^recycling:.*/gi;
+	
 	// building the api call for atms (automated teller machine)
 	// the overpass api URL
-	var ovpCall = 'http://overpass-api.de/api/interpreter?data=';
+    var ovpCall = 'http://overpass-api.de/api/interpreter?data=';
 
-	// setting the output format to json
-	ovpCall += '[out:json];';
-
-	ovpCall += ';out body center qt;';
+    ovpCall += '[out:json][timeout:15];';
+	ovpCall += 'area(3601263897)->.area;';
+    ovpCall += '(';
+	ovpCall += 'node["amenity"="recycling"]({{bbox}});';
+    ovpCall += 'way["amenity"="recycling"]({{bbox}});';
+    ovpCall += 'relation["amenity"="recycling"]({{bbox}});';
+	ovpCall += ')';
+    ovpCall += ';out body center qt;';
 
 	/** **************** */
 	/** private methods */
@@ -56,6 +62,36 @@ var ICONMAP = {};
 					if (!(node.id in nodeIds)) {
 
 						nodeIds[node.id] = true;
+						
+						var status = 0;
+						Object.keys(node.tags).forEach(function(k) {
+							if (k === "amenity") {
+								status = status | 0x01;
+							}
+							if (k === "recycling_type") {
+								status = status | 0x02
+							}
+							if (recyclingmaterial.test(k)) {
+								status = status | 0x04
+							}
+						});
+
+						if (status == 1) {
+							addIconToMap(node, operatorCategories[0], 'red',
+									100);
+						} else if (status == 3) {
+							addIconToMap(node, operatorCategories[1], 'orange',
+									100);
+						} else if (status == 5) {
+							addIconToMap(node, operatorCategories[2], 'yellow',
+									100);
+						} else if (status == 7) {
+							addIconToMap(node, operatorCategories[3], 'green',
+									100);
+						} else {
+							addIconToMap(node, operatorCategories[0], 'white',
+									100);
+						}
 
 					}
 				}
