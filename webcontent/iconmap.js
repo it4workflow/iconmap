@@ -109,7 +109,16 @@ var ICONMAP = {};
 	};
 
 	var createCircle = function(node, color, radius) {
-		var circle = L.circle([ node.lat, node.lon ], radius, {
+                var lat, lon;
+                if (node.type == "node") {
+			lat=node.lat;
+			lon=node.lon;
+		} else if (node.type == "way") {
+			lat=node.center.lat;
+			lon=node.center.lon;
+		}
+
+		var circle = L.circle([ lat, lon ], radius, {
 			stroke : false,
 			color : color,
 			fillColor : color,
