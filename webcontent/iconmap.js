@@ -12,11 +12,17 @@ var ICONMAP = {};
 	var nodeIds = {}; // JavaScript pattern: object literal
 	var wayNodeIds = {};
 	var namedGroup = {};
+	var circles = new Array();
 
 	var operatorLayers;
 	var operatorCategories = [ "amenity only", "amenity and type", "amenity and material", "complete" ];
 	
 	var map = null;
+	
+	var myZoom = {
+	  start:  0,
+	  end: 0
+	};
 
 	var recyclingmaterial=/^recycling:.*/gi;
 	
@@ -104,6 +110,7 @@ var ICONMAP = {};
 		name = utils.createNameFromeTags(node);
 		// marker = createMarker(node, name);
 		circle = createCircle(node, color, radius);
+		circles.push(circle);
 		addToNamedGroup(type, circle);
 		// addToNamedGroup(type, marker);
 	};
@@ -209,6 +216,22 @@ var ICONMAP = {};
 		loadPois();
 
 		map.on('moveend', moveEnd);
+		
+		map.on('zoomstart', function(e) {
+		   myZoom.start = map.getZoom();
+		})
+		
+		map.on('zoomend', function(e) {
+			myZoom.end = map.getZoom();
+			var diff = myZoom.start - myZoom.end;
+			circles.forEach(function(circle) {
+				if (diff > 0) {
+					circle.setRadius(circle.getRadius() * 2);
+				} else if (diff < 0) {
+					circle.setRadius(circle.getRadius() / 2);
+				}
+			});
+		});
 
 		// map.locate();
 	};
