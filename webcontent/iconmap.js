@@ -3,45 +3,36 @@ var ICONMAP = {};
 
 (function() {
 
-	// dependencies
 	utils = UTILS;
 
-	/* private attributes */
+	var map = null;
 
-	// contains the node id of the OSM objects
-	var nodeIds = {}; // JavaScript pattern: object literal
-	var wayNodeIds = {};
+	var osmIds = {};
 	var namedGroup = {};
 	var circles = new Array();
+	var radius = 100;
 
 	var operatorLayers;
-	var operatorCategories = [ "amenity only", "amenity and type", "amenity and material", "complete" ];
-	
-	var map = null;
-	
-	var myZoom = {
-	  start:  0,
-	  end: 0
+	var operatorCategories = [ "amenity only", "amenity and type",
+			"amenity and material", "complete" ];
+
+	var zoom = {
+		start : 0,
+		end : 0
 	};
 
-	var recyclingmaterial=/^recycling:.*/gi;
-	
-	// building the api call for atms (automated teller machine)
+	var recyclingmaterial = /^recycling:.*/gi;
+
 	// the overpass api URL
-    var ovpCall = 'http://overpass-api.de/api/interpreter?data=';
+	var ovpCall = 'http://overpass-api.de/api/interpreter?data=';
 
-    ovpCall += '[out:json][timeout:15];';
-	ovpCall += 'area(3601263897)->.area;';
-    ovpCall += '(';
+	ovpCall += '[out:json][timeout:15];';
+	ovpCall += '(';
 	ovpCall += 'node["amenity"="recycling"]({{bbox}});';
-    ovpCall += 'way["amenity"="recycling"]({{bbox}});';
-    ovpCall += 'relation["amenity"="recycling"]({{bbox}});';
+	ovpCall += 'way["amenity"="recycling"]({{bbox}});';
+	ovpCall += 'relation["amenity"="recycling"]({{bbox}});';
 	ovpCall += ')';
-    ovpCall += ';out body center qt;';
-
-	/** **************** */
-	/** private methods */
-	/** **************** */
+	ovpCall += ';out body center qt;';
 
 	var loadPois = function() {
 		var overpassCall;
@@ -61,42 +52,42 @@ var ICONMAP = {};
 		$.getJSON(overpassCall, function(data) {
 
 			// overpass returns a list with elements, which contains the nodes
-			$.each(data.elements, function(index, node) {
+			$.each(data.elements, function(index, element) {
 
-				if ("tags" in node) {
+				if ("tags" in element) {
 
-					if (!(node.id in nodeIds)) {
+					if (!(element.id in osmIds)) {
 
-						nodeIds[node.id] = true;
+						osmIds[element.id] = true;
 
 						var status = 0;
-						Object.keys(node.tags).forEach(function(k) {
+						Object.keys(element.tags).forEach(function(k) {
 							if (k === "amenity") {
 								status = status | 0x01;
 							}
 							if (k === "recycling_type") {
-								status = status | 0x02
+								status = status | 0x02;
 							}
 							if (recyclingmaterial.test(k)) {
-								status = status | 0x04
+								status = status | 0x04;
 							}
 						});
 
 						if (status == 1) {
-							addIconToMap(node, operatorCategories[0], 'red',
-									100);
+							addIconToMap(element, operatorCategories[0], 'red',
+									radius);
 						} else if (status == 3) {
-							addIconToMap(node, operatorCategories[1], 'orange',
-									100);
+							addIconToMap(element, operatorCategories[1],
+									'orange', radius);
 						} else if (status == 5) {
-							addIconToMap(node, operatorCategories[2], 'yellow',
-									100);
+							addIconToMap(element, operatorCategories[2],
+									'yellow', radius);
 						} else if (status == 7) {
-							addIconToMap(node, operatorCategories[3], 'green',
-									100);
+							addIconToMap(element, operatorCategories[3],
+									'green', radius);
 						} else {
-							addIconToMap(node, operatorCategories[0], 'white',
-									100);
+							addIconToMap(element, operatorCategories[0],
+									'white', radius);
 						}
 					}
 				}
@@ -104,25 +95,25 @@ var ICONMAP = {};
 		});
 	};
 
-	var addIconToMap = function(node, type, color, radius) {
+	var addIconToMap = function(element, type, color, radius) {
 		var name, marker;
 
-		name = utils.createNameFromeTags(node);
-		// marker = createMarker(node, name);
-		circle = createCircle(node, color, radius);
+		name = utils.createNameFromeTags(element);
+		// marker = createMarker(element, name);
+		circle = createCircle(element, color, radius);
 		circles.push(circle);
 		addToNamedGroup(type, circle);
 		// addToNamedGroup(type, marker);
 	};
 
-	var createCircle = function(node, color, radius) {
-                var lat, lon;
-                if (node.type == "node") {
-			lat=node.lat;
-			lon=node.lon;
-		} else if (node.type == "way") {
-			lat=node.center.lat;
-			lon=node.center.lon;
+	var createCircle = function(element, color, radius) {
+		var lat, lon;
+		if (element.type == "node") {
+			lat = element.lat;
+			lon = element.lon;
+		} else if (element.type == "way") {
+			lat = element.center.lat;
+			lon = element.center.lon;
 		}
 
 		var circle = L.circle([ lat, lon ], radius, {
@@ -132,14 +123,14 @@ var ICONMAP = {};
 			fillOpacity : 0.7
 		});
 		circle.bindPopup("<pre><code>"
-				+ JSON.stringify(node.tags, null, 2).toString()
+				+ JSON.stringify(element.tags, null, 2).toString()
 				+ "</code></pre>");
 		return circle;
 	};
 
-	var createMarker = function(node, name) {
-		if (node.type == "node") {
-			var marker = L.marker([ node.lat, node.lon ]);
+	var createMarker = function(element, name) {
+		if (element.type == "node") {
+			var marker = L.marker([ element.lat, element.lon ]);
 
 			marker.bindPopup(name);
 
@@ -209,6 +200,12 @@ var ICONMAP = {};
 			noResultLabel : "kein Ergebnis"
 		}));
 
+		map.addControl(new L.Control.Permalink({
+			text : 'Permalink',
+			layers : map.layers
+		}));
+
+		
 		buildLayers();
 
 		utils.addLegendTo(map);
@@ -216,20 +213,21 @@ var ICONMAP = {};
 		loadPois();
 
 		map.on('moveend', moveEnd);
-		
+
 		map.on('zoomstart', function(e) {
-		   myZoom.start = map.getZoom();
-		})
-		
+			zoom.start = map.getZoom();
+		});
+
 		map.on('zoomend', function(e) {
-			myZoom.end = map.getZoom();
-			var diff = myZoom.start - myZoom.end;
+			zoom.end = map.getZoom();
+			var diff = zoom.start - zoom.end;
+			if (diff > 0) {
+				radius = radius * 2;
+			} else if (diff < 0) {
+				radius = radius / 2;
+			}
 			circles.forEach(function(circle) {
-				if (diff > 0) {
-					circle.setRadius(circle.getRadius() * 2);
-				} else if (diff < 0) {
-					circle.setRadius(circle.getRadius() / 2);
-				}
+				circle.setRadius(radius)
 			});
 		});
 
